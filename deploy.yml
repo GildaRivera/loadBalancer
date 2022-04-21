@@ -1,0 +1,59 @@
+#Crear vm1
+echo '> Crear vm1'
+gcloud compute instances create vm1 \
+   --tags=loadbalancer\
+   --image-family=debian-9 \
+   --image-project=debian-cloud \
+   --metadata=startup-script="#! /bin/bash
+     sudo apt-get update
+     sudo apt-get install apache2 -y
+     sudo service apache2 restart "
+
+#Crear vm2
+echo '> Crear vm2'
+gcloud compute instances create vm2 \
+   --tags=loadbalancer\
+   --image-family=debian-9 \
+   --image-project=debian-cloud \
+   --metadata=startup-script="#! /bin/bash
+     sudo apt-get update
+     sudo apt-get install apache2 -y
+     sudo service apache2 restart "
+
+#Crear vm3
+echo '> Crear vm3'
+gcloud compute instances create vm3 \
+   --tags=loadbalancer\
+   --image-family=debian-9 \
+   --image-project=debian-cloud \
+   --metadata=startup-script="#! /bin/bash
+     sudo apt-get update
+     sudo apt-get install apache2 -y
+     sudo service apache2 restart "
+
+#Crear regla de firewall
+echo '> Crear regla de firewall'
+gcloud compute firewall-rules create www-firewall--network-lb \
+  --target-tags loadbalancer\
+  --allow tcp:80
+#Crear load balancer
+echo '> Crear load balancer'
+gcloud compute addresses create loadbalancer-1
+#Crear health check
+echo '> Crear health check'
+gcloud compute http-health-checks create hc1
+
+#Crear target pool
+echo '> Crear target pool'
+gcloud compute target-pools create www-pool \
+  --http-health-check hc1
+#Agregar instancias a pool
+echo '> Agregar instancias a pool'
+gcloud compute target-pools add-instances www-pool \
+  --instances vm1,vm2,vm3
+#Agregar regla de entrada
+echo '> Agregar regla de entrada'
+gcloud compute forwarding-rules create www-rule \
+  --ports 80 \
+  --address loadbalancer-1 \
+  --target-pool www-pool
